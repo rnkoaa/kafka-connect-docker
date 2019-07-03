@@ -1,0 +1,46 @@
+https://www.confluent.io/blog/kafka-connect-deep-dive-jdbc-source-connector#specifying-tables
+{
+  "name":"distributed-psql-source",
+  "config": {
+    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max":"2",
+    "connection.url":"jdbc:postgresql://192.168.99.100:5432/connect_test?user=postgres&password=postgres",
+    "connection.user": "postgres",
+    "connection.password": "postgres",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "mode":"timestamp+incrementing", // most robust
+    "timestamp.column.name":"modified",
+    "incrementing.column.name":"id",
+    "topic.prefix":"psql",
+    "topics": "test-topic",
+  //  "timestamp.delay.interval.ms": "60000",
+    "name":"distributed-psql-source",
+    "poll.interval.ms" : 600000,
+     "mode":"bulk", // select everything once every minute
+    "catalog.pattern" : "demo", // tables from demo schema
+    "table.whitelist": "users,products,transactions",
+
+    "validate.non.null": false,
+
+    "catalog.pattern" : "demo",
+    "table.whitelist" : "accounts",
+
+    "transforms":"dropTopicPrefix",
+    "transforms.dropTopicPrefix.type":"org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.dropTopicPrefix.regex":"mysql-07-(.*)",
+    "transforms.dropTopicPrefix.replacement":"$1",
+
+    // same as
+    "table.whitelist" : "demo.accounts",
+  },
+  "tasks":[
+    {
+      "connector":"distributed-psql-source",
+      "task":0
+    },
+    {
+      "connector":"distributed-psql-source",
+      "task":1
+    }
+  ]
+}
